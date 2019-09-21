@@ -10,7 +10,7 @@ CEthernetClient::CEthernetClient(void) :
 
 {
 
-	m_ui_command_size = COMMAND_BUF_SIZE ;
+	m_ui_command_size = DATA_BUF_SIZE ;
 	m_p_command = new unsigned char[m_ui_command_size] ;
 	
 	//m_s = new tcp::socket(m_io_service);
@@ -612,6 +612,86 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 	m_cls_check_data.init_variable();
 	
     return  ENSEMBLE_SUCCESS ;
+}
+
+int CEthernetClient::SendImage(const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len)
+{
+	if (m_s == NULL || m_resolver == NULL)
+	{
+		return ENSEMBLE_ERROR_INVALID_MEMORY;
+	}
+
+	unsigned int index = 0 ;
+	m_p_command[index++] = '[';
+	m_p_command[index++] = 'R';
+	m_p_command[index++] = 'D';
+	m_p_command[index++] = 'V';
+
+	m_p_command[index++] = (command & 0xFF000000) >> 24;
+	m_p_command[index++] = (command & 0x00FF0000) >> 16;
+	m_p_command[index++] = (command & 0x0000FF00) >> 8;
+	m_p_command[index++] = (command & 0x000000FF);
+
+	//image width
+	m_p_command[index++] = (width & 0xFF000000) >> 24;
+	m_p_command[index++] = (width & 0x00FF0000) >> 16;
+	m_p_command[index++] = (width & 0x0000FF00) >> 8;
+	m_p_command[index++] = (width & 0x000000FF);
+
+	//image height
+	m_p_command[index++] = (unsigned char)(((height) & 0xFF000000) >> 24);
+	m_p_command[index++] = (unsigned char)(((height) & 0x00FF0000) >> 16);
+	m_p_command[index++] = (unsigned char)(((height) & 0x0000FF00) >> 8);
+	m_p_command[index++] = (unsigned char)(((height) & 0x000000FF));
+
+	//image type
+	m_p_command[index++] = (unsigned char)((image_type & 0xFF000000) >> 24);
+	m_p_command[index++] = (unsigned char)((image_type & 0x00FF0000) >> 16);
+	m_p_command[index++] = (unsigned char)((image_type & 0x0000FF00) >> 8);
+	m_p_command[index++] = (unsigned char)((image_type & 0x000000FF));
+
+	//buf data len
+	m_p_command[index++] = (unsigned char)((buf_len & 0xFF000000) >> 24);
+	m_p_command[index++] = (unsigned char)((buf_len & 0x00FF0000) >> 16);
+	m_p_command[index++] = (unsigned char)((buf_len & 0x0000FF00) >> 8);
+	m_p_command[index++] = (unsigned char)((buf_len & 0x000000FF));
+
+	//image buf
+    if( image_buf != NULL && buf_len > 0)
+    {				
+        memcpy(m_p_command + index, image_buf, buf_len);	
+		index += buf_len ;
+    }
+	
+	m_p_command[index++] = 'E';
+	m_p_command[index++] = 'S';
+	m_p_command[index++] = 'B';
+	m_p_command[index++] = ']';
+    //m_p_command[index] = 0;
+
+	//send(client_socket, &command, sizeof(command), 0);
+	//printf("sizeof(m_command) = %d\n", sizeof(m_command));
+
+#if 0
+	send(client_socket, m_command, sizeof(char)*(2+(*len)), 0);
+#else
+	//printf("send len = %d\n", sizeof(char)*(2 + (*len)));
+	//printf("m_command[0] = %d\n", m_command[0]);
+	//printf("m_command[1] = %d\n", m_command[1]);
+    try
+	{
+   		boost::asio::write(*m_s, boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index)));
+    }
+    catch(exception& e)
+    {
+    	m_s->close();
+    	m_resolver = NULL;
+        return ENSEMBLE_ERROR_SOCKET_WRITE;
+    }
+
+#endif
+
+	return  ENSEMBLE_SUCCESS ;
 }
 
 int CEthernetClient::ReceiveImage(const unsigned int command, int& width, int& height, unsigned char** out_data)
