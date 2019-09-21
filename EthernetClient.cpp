@@ -456,6 +456,25 @@ int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const 
     return ENSEMBLE_SUCCESS;
 }
 #else
+
+int CEthernetClient::SendNoData(const unsigned int command, const std::string id)
+{
+	std::vector<float> vec_send_data ;
+	Send(command, id, &vec_send_data) ;	
+}
+
+int CEthernetClient::SendString(const unsigned int command, const std::string id, const std::string str)
+{
+	std::vector<float> vec_send_data ;
+	int send_data_size = str.size() ;
+	for( int i=0 ; i<send_data_size ; i++ )
+	{
+		vec_send_data.push_back(str[i]) ;
+	}
+	
+	Send(command, id, &vec_send_data) ;	
+}
+
 int CEthernetClient::Send(const unsigned int command, const std::string id, std::vector<float> *p_vec_send_data)
 {
 	if (m_s == NULL)
@@ -549,7 +568,7 @@ int CEthernetClient::Send(const unsigned int command, const std::string id, std:
 	return  ENSEMBLE_SUCCESS ;
 }
 
-int CEthernetClient::Receive(std::vector<float>* out_receive_data) 
+int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_receive_data) 
 {
 	if (m_s == NULL)
 	{
@@ -618,6 +637,40 @@ int CEthernetClient::Receive(std::vector<float>* out_receive_data)
 	
 	//-------------------------------------------------------------
 	//head data
+
+	
+	//ID length
+	int i_id_length = 0 ;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length = (i_get_data << 24) & 0xFF000000;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data << 16) & 0x00FF0000;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data << 8) & 0x0000FF00;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data) & 0x000000FF;
+
+	std::string str_id ;
+	if( i_id_length > 0 )
+	{
+		str_id.reserve(i_id_length) ;
+
+		for( int i=0 ; i<i_id_length ; i++ )
+		{
+			int i_char = 0 ;
+			i_get_data = (unsigned int)buf[index++];
+			i_char = (i_get_data << 24) & 0xFF000000;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data << 16) & 0x00FF0000;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data << 8) & 0x0000FF00;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data) & 0x000000FF;
+			
+			str_id[i] = (char)i_char ;
+		}
+	}
+	if( out_str_id )	(*out_str_id) = str_id ;
 
 	//-------------------------------------------------------------------------------------------
 	// 2. Scale Factor
@@ -752,6 +805,38 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 	//-------------------------------------------------------------
 	//head data
 
+	//ID length
+	int i_id_length = 0 ;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length = (i_get_data << 24) & 0xFF000000;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data << 16) & 0x00FF0000;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data << 8) & 0x0000FF00;
+	i_get_data = (unsigned int)buf[index++];
+	i_id_length |= (i_get_data) & 0x000000FF;
+
+	std::string str_id ;
+	if( i_id_length > 0 )
+	{
+		str_id.reserve(i_id_length) ;
+
+		for( int i=0 ; i<i_id_length ; i++ )
+		{
+			int i_char = 0 ;
+			i_get_data = (unsigned int)buf[index++];
+			i_char = (i_get_data << 24) & 0xFF000000;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data << 16) & 0x00FF0000;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data << 8) & 0x0000FF00;
+			i_get_data = (unsigned int)buf[index++];
+			i_char |= (i_get_data) & 0x000000FF;
+			
+			str_id[i] = (char)i_char ;
+		}
+	}
+	
 	//-------------------------------------------------------------------------------------------
 	// 2. Scale Factor
 	//-----

@@ -36,8 +36,10 @@ public:
 	~CEthernetClient(void);
 
 	int Send(const unsigned int command, const std::string id, std::vector<float> *p_vec_send_data);
+	int SendNoData(const unsigned int command, const std::string id);
+	int SendString(const unsigned int command, const std::string id, const std::string str);
 	int Receive(const unsigned int command, std::vector<float>* out_receive_data) ;
-	int Receive(std::vector<float>* out_receive_data) ;
+	int Receive(std::string *out_str_id, std::vector<float>* out_receive_data) ;
 
 	int SendImage(const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len);
 	int ReceiveImage(const unsigned int command, int& width, int& height, unsigned char** out_data) ;
