@@ -37,13 +37,19 @@ public:
 
 	int Send(const unsigned int command, const std::string id, std::vector<float> *p_vec_send_data);
 	int Receive(const unsigned int command, std::vector<float>* out_receive_data) ;
+	int Receive(std::vector<float>* out_receive_data) ;
 
 	int SendImage(const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len);
 	int ReceiveImage(const unsigned int command, int& width, int& height, unsigned char** out_data) ;
 	
 	int Send(unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor);
+
+	int Accept(const int port) ;
+	//OR
     int Open(const char* ip, unsigned int port);
+
 	void Close();
+	void Release(void) ;
 	int handle_connect(const boost::system::error_code& err);
 
 private:
@@ -55,7 +61,8 @@ private:
 	tcp::socket *m_s;
 	tcp::resolver *m_resolver;
 	deadline_timer *m_timer;
-
+	tcp::acceptor *m_acceptor ;
+	
 	//char *m_buf;
 	unsigned char m_buf[DEFAULT_BUFLEN2];
 

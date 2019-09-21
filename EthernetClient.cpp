@@ -6,6 +6,8 @@ CEthernetClient::CEthernetClient(void) :
 	m_s(NULL)
 	,m_resolver(NULL)
 	, m_p_command(NULL)
+	, m_acceptor(NULL)
+	, m_io_service(NULL)
 	, m_ui_command_size(0)
 
 {
@@ -54,10 +56,21 @@ CEthernetClient::~CEthernetClient(void)
 		m_p_command = NULL ;
 	}
 
+	Release() ;
+}
+
+void CEthernetClient::Release(void) 
+{
 	if (m_s != NULL)
 	{
 		delete m_s;
 		m_s = NULL;
+	}
+
+	if( m_acceptor != NULL )
+	{
+		delete m_acceptor ;
+		m_acceptor = NULL;
 	}
 
 	if (m_resolver != NULL)
@@ -79,9 +92,71 @@ CEthernetClient::~CEthernetClient(void)
 	}
 }
 
+int CEthernetClient::Accept(const int port) 
+{
+	if( m_s )
+	{
+		printf("Already Connect\n") ;
+		return ENSEMBLE_ERROR_ALREADY_CONNECT ;
+	}
+	
+	m_io_service = new io_service();
+	m_s = new tcp::socket(*m_io_service);
+	m_resolver = new tcp::resolver(*m_io_service);
+	m_timer = new deadline_timer(*m_io_service);
+	m_acceptor = new tcp::acceptor(*m_io_service, tcp::endpoint(tcp::v4(), port));
+
+	//a.accept((*m_s));
+	
+	try
+	{
+#if 0	
+		m_acceptor->async_accept((*m_s), boost::bind(&CEthernetClient::handle_connect, this, boost::asio::placeholders::error)) ;
+
+		m_timer->expires_from_now(boost::posix_time::seconds(3));
+		m_timer->async_wait(boost::bind(&CEthernetClient::Close, this));
+
+		do {
+			m_io_service->run_one();
+		} while (ec == boost::asio::error::would_block);
+		if (ec || !m_s->is_open() || TimeOut == 1)
+		{
+			//cout << "error happend in socket connect" << endl;
+			m_s->close();
+			Release() ;
+
+			TimeOut = 0;
+
+			return ENSEMBLE_ERROR_SOCKET_CONNECT;
+		}
+		m_timer->cancel();
+#else
+		printf("Waiting Client..\n");
+		m_acceptor->accept((*m_s)) ;		//inf
+		cout << "Connection IP : " <<  m_s->remote_endpoint().address().to_string() << endl;
+#endif
+	}
+	catch (boost::system::system_error const &e)
+	{
+		//cout << "Warning : could not connect : " << e.what() << endl;
+		//Close();
+		Release() ;
+		
+		return ENSEMBLE_ERROR_SOCKET_CONNECT;
+	}
+
+	return ENSEMBLE_SUCCESS;
+}
+
 int CEthernetClient::Open(const char* ip, unsigned int port)
 {
 	boost::system::error_code ec;
+
+	if( m_s )
+	{
+		printf("Already Connect\n") ;
+		return ENSEMBLE_ERROR_ALREADY_CONNECT ;
+	}
 
 	m_io_service = new io_service();
 	m_s = new tcp::socket(*m_io_service);
@@ -106,14 +181,7 @@ int CEthernetClient::Open(const char* ip, unsigned int port)
 		{
 			//cout << "error happend in socket connect" << endl;
 			m_s->close();
-			delete m_s;
-			m_s = NULL;
-			delete m_timer;
-			delete m_resolver;
-			delete m_io_service;
-			m_timer = NULL;
-			m_resolver = NULL;
-			m_io_service = NULL;
+			Release() ;
 
 			TimeOut = 0;
 
@@ -125,8 +193,8 @@ int CEthernetClient::Open(const char* ip, unsigned int port)
 	{
 		//cout << "Warning : could not connect : " << e.what() << endl;
 		//Close();
-		delete m_s;
-		m_s = NULL;
+		Release() ;
+		
 		return ENSEMBLE_ERROR_SOCKET_CONNECT;
 	}
 
@@ -178,7 +246,7 @@ void CEthernetClient::Close()
 #if 0
 int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor )
 {
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		*out_data_size = 0;
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
@@ -390,7 +458,7 @@ int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const 
 #else
 int CEthernetClient::Send(const unsigned int command, const std::string id, std::vector<float> *p_vec_send_data)
 {
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
@@ -472,7 +540,7 @@ int CEthernetClient::Send(const unsigned int command, const std::string id, std:
     catch(exception& e)
     {
     	m_s->close();
-    	m_resolver = NULL;
+    	Release() ;
         return ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
@@ -481,9 +549,143 @@ int CEthernetClient::Send(const unsigned int command, const std::string id, std:
 	return  ENSEMBLE_SUCCESS ;
 }
 
+int CEthernetClient::Receive(std::vector<float>* out_receive_data) 
+{
+	if (m_s == NULL)
+	{
+		return ENSEMBLE_ERROR_INVALID_MEMORY;
+	}
+	
+	unsigned char* buf = NULL;
+	int buf_size = 0 ;
+
+	int get_command = -1;
+	int index = 0 ;
+	unsigned int i_get_data = 0 ;
+	int cnt = 0;
+
+	//-------------------------------------------------------------------------------------------
+	// 1. Get Command(Check Command)
+	//-----
+	m_cls_check_data.init_variable();
+
+	//do
+	//{
+        //int rev_count = 0 ;
+		do
+		{
+			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
+			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
+            try{
+			    boost::system::error_code error;
+				//cnt = m_s->read_some(boost::asio::buffer(m_buf), error);
+    			//cnt = m_s->read_some(boost::asio::buffer(m_buf), error);
+                //qDebug("receive") ;
+			
+	    		cnt = m_s->receive(boost::asio::buffer(m_buf));
+					
+                //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
+		    	//cnt = m_s->async_read_some(boost::asio::buffer(m_buf), error);
+
+				if (error == boost::asio::error::eof)
+    				break; // Connection closed cleanly by peer.
+	    		else if (error)
+		    		throw boost::system::system_error(error); // Some other error.
+            }
+            catch(exception& e)
+            {
+            	m_s->close();
+            	Release() ;
+                m_cls_check_data.init_variable();
+                return ENSEMBLE_ERROR_SOCKET_READ;
+            }
+			
+			//int out_size = 0;
+            buf = m_cls_check_data.FindData(m_buf, cnt, &buf_size);
+		} while (buf == NULL);
+
+		index = 0 ;
+		i_get_data = (unsigned int)buf[index++];
+		get_command = (i_get_data << 24) & 0xFF000000;
+		i_get_data = (unsigned int)buf[index++];
+		get_command |= (i_get_data << 16) & 0x00FF0000;
+		i_get_data = (unsigned int)buf[index++];
+		get_command |= (i_get_data << 8) & 0x0000FF00;
+		i_get_data = (unsigned int)buf[index++];
+		get_command |= (i_get_data) & 0x000000FF;
+	
+	//} while (get_command != command);
+	
+	//-------------------------------------------------------------
+	//head data
+
+	//-------------------------------------------------------------------------------------------
+	// 2. Scale Factor
+	//-----
+	unsigned int scale_factor = 0 ;
+	i_get_data = (unsigned int)buf[index++];
+	scale_factor = (i_get_data << 24) & 0xFF000000;
+	i_get_data = (unsigned int)buf[index++];
+	scale_factor |= (i_get_data << 16) & 0x00FF0000;
+	i_get_data = (unsigned int)buf[index++];
+	scale_factor |= (i_get_data << 8) & 0x0000FF00;
+	i_get_data = (unsigned int)buf[index++];
+	scale_factor |= (i_get_data) & 0x000000FF;
+
+	//-------------------------------------------------------------------------------------------
+	// 3. data length
+	//-----
+	unsigned int data_length = 0 ;
+	i_get_data = (unsigned int)buf[index++];
+	data_length = (i_get_data << 24) & 0xFF000000;
+	i_get_data = (unsigned int)buf[index++];
+	data_length |= (i_get_data << 16) & 0x00FF0000;
+	i_get_data = (unsigned int)buf[index++];
+	data_length |= (i_get_data << 8) & 0x0000FF00;
+	i_get_data = (unsigned int)buf[index++];
+	data_length |= (i_get_data) & 0x000000FF;
+	//head data
+	
+	//-------------------------------------------------------------
+
+	//-------------------------------------------------------------------------------------------
+	// 4. data
+	//-----
+	if( data_length > 0 )
+	{
+		if( out_receive_data )
+		{
+			if( out_receive_data->size() > 0 ) out_receive_data->clear() ;
+			out_receive_data->reserve(data_length) ;
+
+			for( int i=0 ; i<data_length ; i++ )
+			{
+				int i_get_data_value = 0 ;
+				
+				i_get_data = (unsigned int)buf[index++];
+				i_get_data_value = (i_get_data << 24) & 0xFF000000;
+				i_get_data = (unsigned int)buf[index++];
+				i_get_data_value |= (i_get_data << 16) & 0x00FF0000;
+				i_get_data = (unsigned int)buf[index++];
+				i_get_data_value |= (i_get_data << 8) & 0x0000FF00;
+				i_get_data = (unsigned int)buf[index++];
+				i_get_data_value |= (i_get_data) & 0x000000FF;
+
+				float f_get_data_value = (float)i_get_data_value / (float)scale_factor ;
+
+				(*out_receive_data)[i] = f_get_data_value ;
+			}
+		}
+	}
+	
+	m_cls_check_data.init_variable();
+	
+    return  get_command ;
+}
+
 int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out_receive_data) 
 {	
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
@@ -526,7 +728,7 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
             catch(exception& e)
             {
             	m_s->close();
-            	m_resolver = NULL;
+            	Release() ;
                 m_cls_check_data.init_variable();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
@@ -616,7 +818,7 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 
 int CEthernetClient::SendImage(const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len)
 {
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
@@ -685,7 +887,7 @@ int CEthernetClient::SendImage(const unsigned int command, const int width, cons
     catch(exception& e)
     {
     	m_s->close();
-    	m_resolver = NULL;
+    	Release() ;
         return ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
@@ -696,7 +898,7 @@ int CEthernetClient::SendImage(const unsigned int command, const int width, cons
 
 int CEthernetClient::ReceiveImage(const unsigned int command, int& width, int& height, unsigned char** out_data)
 {
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
@@ -739,7 +941,7 @@ int CEthernetClient::ReceiveImage(const unsigned int command, int& width, int& h
             catch(exception& e)
             {
             	m_s->close();
-            	m_resolver = NULL;
+            	Release() ;
                 m_cls_check_data.init_variable();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
@@ -852,7 +1054,7 @@ int CEthernetClient::ReceiveImage(const unsigned int command, int& width, int& h
 
 int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor )
 {
-	if (m_s == NULL || m_resolver == NULL)
+	if (m_s == NULL)
 	{
 		*out_data_size = 0;
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
@@ -921,7 +1123,7 @@ int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const 
     catch(exception& e)
     {
     	m_s->close();
-    	m_resolver = NULL;
+    	Release() ;
         return ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
@@ -969,7 +1171,7 @@ int CEthernetClient::Send(unsigned int command, unsigned char* send_data, const 
             catch(exception& e)
             {
             	m_s->close();
-            	m_resolver = NULL;
+            	Release() ;
                 m_cls_check_data.init_variable();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
