@@ -653,7 +653,7 @@ int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_re
 	std::string str_id ;
 	if( i_id_length > 0 )
 	{
-		str_id.reserve(i_id_length) ;
+		str_id.resize(i_id_length) ;
 
 		for( int i=0 ; i<i_id_length ; i++ )
 		{
@@ -709,7 +709,7 @@ int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_re
 		if( out_receive_data )
 		{
 			if( out_receive_data->size() > 0 ) out_receive_data->clear() ;
-			out_receive_data->reserve(data_length) ;
+			out_receive_data->resize(data_length) ;
 
 			for( int i=0 ; i<data_length ; i++ )
 			{
@@ -819,7 +819,7 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 	std::string str_id ;
 	if( i_id_length > 0 )
 	{
-		str_id.reserve(i_id_length) ;
+		str_id.resize(i_id_length) ;
 
 		for( int i=0 ; i<i_id_length ; i++ )
 		{
@@ -874,7 +874,7 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 		if( out_receive_data )
 		{
 			if( out_receive_data->size() > 0 ) out_receive_data->clear() ;
-			out_receive_data->reserve(data_length) ;
+			out_receive_data->resize(data_length) ;
 
 			for( int i=0 ; i<data_length ; i++ )
 			{
