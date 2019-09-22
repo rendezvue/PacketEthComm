@@ -570,6 +570,8 @@ int CEthernetClient::Send(const unsigned int command, const std::string id, std:
 
 int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_receive_data) 
 {
+	printf("receive\n") ;
+	
 	if (m_s == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
@@ -657,19 +659,11 @@ int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_re
 
 		for( int i=0 ; i<i_id_length ; i++ )
 		{
-			int i_char = 0 ;
-			i_get_data = (unsigned int)buf[index++];
-			i_char = (i_get_data << 24) & 0xFF000000;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data << 16) & 0x00FF0000;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data << 8) & 0x0000FF00;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data) & 0x000000FF;
-			
+			int i_char = (unsigned int)buf[index++];			
 			str_id[i] = (char)i_char ;
 		}
 	}
+	
 	if( out_str_id )	(*out_str_id) = str_id ;
 
 	//-------------------------------------------------------------------------------------------
@@ -823,16 +817,7 @@ int CEthernetClient::Receive(const unsigned int command, std::vector<float>* out
 
 		for( int i=0 ; i<i_id_length ; i++ )
 		{
-			int i_char = 0 ;
-			i_get_data = (unsigned int)buf[index++];
-			i_char = (i_get_data << 24) & 0xFF000000;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data << 16) & 0x00FF0000;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data << 8) & 0x0000FF00;
-			i_get_data = (unsigned int)buf[index++];
-			i_char |= (i_get_data) & 0x000000FF;
-			
+			int i_char = (unsigned int)buf[index++];
 			str_id[i] = (char)i_char ;
 		}
 	}
