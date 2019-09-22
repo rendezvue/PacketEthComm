@@ -570,7 +570,7 @@ int CEthernetClient::Send(const unsigned int command, const std::string id, std:
 
 int CEthernetClient::Receive(std::string *out_str_id, std::vector<float>* out_receive_data) 
 {
-	printf("receive\n") ;
+	//printf("receive\n") ;
 	
 	if (m_s == NULL)
 	{
