@@ -11,6 +11,5 @@
 #define ENSEMBLE_ERROR_NO_CONNECT       (-105)
 
 #define ENSEMBLE_CONNECT_CONTROL_PORT      0x01
-#define ENSEMBLE_CONNECT_IMAGE_PORT        0x02
 
 #endif
