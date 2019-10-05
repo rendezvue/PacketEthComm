@@ -16,8 +16,9 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
+#include "EthernetGetInfo.h" ;
+
 #define PORT "4000"
-#define IPADDR "192.168.56.1"
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;
@@ -29,7 +30,7 @@ public:
 	CEthernetClient(void);
 	~CEthernetClient(void);
 
-	int Accept(const int port) ;
+	int Accept(void) ;
 	//OR
     int Open(const char* ip, unsigned int port);
 
@@ -44,11 +45,8 @@ private:
 	//SOCKET client_socket;
 	//struct sockaddr_in server_addr;
 	//boost::asio::io_service m_io_service;
-	boost::asio::io_service *m_io_service;
 	tcp::socket *m_s;
-	tcp::resolver *m_resolver;
 	deadline_timer *m_timer;
-	tcp::acceptor *m_acceptor ;
 	
 	int TimeOut = 0;
 

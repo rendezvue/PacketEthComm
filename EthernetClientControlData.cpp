@@ -61,7 +61,11 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
 
+	m_mutex.lock();
+
+	int ret = ENSEMBLE_SUCCESS ;
 	int cnt = 0;
+	
 
 	int data_count = 0 ;
 	if( p_vec_send_data )	data_count = p_vec_send_data->size() ;
@@ -137,12 +141,13 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
     }
     catch(exception& e)
     {
-        return ENSEMBLE_ERROR_SOCKET_WRITE;
+        ret = ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
 #endif
+	m_mutex.unlock();
 
-	return  ENSEMBLE_SUCCESS ;
+	return  ret ;
 }
 
 int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_id, std::vector<float>* out_receive_data) 
@@ -153,6 +158,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
+
+	m_mutex.lock();
 	
 	unsigned char* buf = NULL;
 	int buf_size = 0 ;
@@ -193,6 +200,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
             catch(exception& e)
             {
                 m_cls_check_data.init_variable();
+
+				m_mutex.unlock();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -301,6 +310,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 	}
 	
 	m_cls_check_data.init_variable();
+
+	m_mutex.unlock();
 	
     return  get_command ;
 }
@@ -311,7 +322,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
-	
+
+	m_mutex.lock();
 	unsigned char* buf = NULL;
 	int buf_size = 0 ;
 
@@ -350,6 +362,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
             catch(exception& e)
             {
                 m_cls_check_data.init_variable();
+				m_mutex.unlock();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -455,6 +468,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	}
 	
 	m_cls_check_data.init_variable();
+	m_mutex.unlock();
 	
     return  ENSEMBLE_SUCCESS ;
 }
@@ -466,6 +480,8 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
 
+	m_mutex.lock();
+	
 	unsigned int index = 0 ;
 	m_p_command[index++] = '[';
 	m_p_command[index++] = 'R';
@@ -529,11 +545,13 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
     }
     catch(exception& e)
     {
+    	m_mutex.unlock();
         return ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
 #endif
 
+	m_mutex.unlock();
 	return  ENSEMBLE_SUCCESS ;
 }
 
@@ -543,7 +561,8 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
-	
+
+	m_mutex.lock();
 	unsigned char* buf = NULL;
 	int buf_size = 0 ;
 
@@ -582,6 +601,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
             catch(exception& e)
             {
                 m_cls_check_data.init_variable();
+				m_mutex.unlock();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -687,7 +707,8 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	}
 	
 	m_cls_check_data.init_variable();
-	
+
+	m_mutex.unlock();
     return  ENSEMBLE_SUCCESS ;
 }
 
@@ -698,6 +719,8 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 		*out_data_size = 0;
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
+
+	m_mutex.lock();
 
 	int cnt = 0;
 	//char recvbuf[DEFAULT_BUFLEN];
@@ -761,6 +784,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
     }
     catch(exception& e)
     {
+    	m_mutex.unlock();
         return ENSEMBLE_ERROR_SOCKET_WRITE;
     }
 
@@ -808,6 +832,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
             catch(exception& e)
             {
                 m_cls_check_data.init_variable();
+				m_mutex.unlock();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -895,6 +920,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 	if( out_scalefactor != NULL )	*out_scalefactor = scale_factor;
 
 	m_cls_check_data.init_variable();
-	
+
+	m_mutex.unlock();
     return ENSEMBLE_SUCCESS;
 }

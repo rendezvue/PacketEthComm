@@ -16,6 +16,11 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
+//boost 
+#include <boost/asio.hpp>
+#include <boost/thread.hpp>
+
+
 #include "RendezvueCheckData.h"
 
 #define DEFAULT_BUFLEN 4096
@@ -72,6 +77,8 @@ private:
 
 	unsigned char *m_p_command ;
 	unsigned int m_ui_command_size ;
+
+	boost::mutex m_mutex;
 };
 
 #endif
