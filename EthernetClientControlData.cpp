@@ -183,11 +183,11 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+				cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		cnt = soc->receive(boost::asio::buffer(m_buf));
+	    		//cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
@@ -202,6 +202,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
                 m_cls_check_data.init_variable();
 
 				m_mutex.unlock();
+
+				//LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -345,24 +347,33 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+				cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		cnt = soc->receive(boost::asio::buffer(m_buf));
+	    		//cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
-
+				
+				
 				if (error == boost::asio::error::eof)
+				{
+					//printf("Exception Receive : EOF\n") ;
     				break; // Connection closed cleanly by peer.
+				}
 	    		else if (error)
+	    		{
 		    		throw boost::system::system_error(error); // Some other error.
+	    		}
             }
             catch(exception& e)
             {
                 m_cls_check_data.init_variable();
 				m_mutex.unlock();
+
+				//LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+				
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			

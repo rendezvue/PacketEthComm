@@ -29,6 +29,17 @@ void CEthernetClient::Release(void)
 	}
 }
 
+std::string CEthernetClient::GetClinetIpAddress(void)
+{
+	std::string str_ip ;
+
+	if( m_s )
+	{
+		str_ip =m_s->remote_endpoint().address().to_string() ;
+	}
+
+	return str_ip ;
+}
 int CEthernetClient::Accept(void) 
 {
 	if( m_s )

@@ -39,6 +39,7 @@ public:
 	int handle_connect(const boost::system::error_code& err);
 
 	tcp::socket *GetSocketPointer(void) ;
+	std::string GetClinetIpAddress(void) ;
 
 private:
 	//int client_socket;
