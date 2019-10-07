@@ -210,9 +210,9 @@ void CEthernetClient::Shutdown(void)
 {
 	if( m_s )
 	{
-		m_s->shutdown(boost::asio::socket_base::shutdown_both);
+		//m_s->shutdown(boost::asio::socket_base::shutdown_both);
 		
-		m_s->close();
+		if( m_s->is_open() ) m_s->close();
 		Release() ;
 	}
 }
