@@ -124,7 +124,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	m_p_command[index++] = 'S';
 	m_p_command[index++] = 'B';
 	m_p_command[index++] = ']';
-   //m_p_command[index++] = 0;
+    //m_p_command[index++] = 0;
 
 	//send(client_socket, &command, sizeof(command), 0);
 	//printf("sizeof(m_command) = %d\n", sizeof(m_command));
@@ -189,16 +189,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-                //soc->async_receive(boost::asio::buffer(buf, 1024), boost::bind(&CEthernetClientControlData::OnAsyncReceive, this, boost::asio::placeholders::error));
-                soc->async_read_some(boost::asio::buffer(buf, DEFAULT_BUFLEN2), boost::bind(&CEthernetClientControlData::OnAsyncReceive, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-                //cnt = soc->read_some(boost::asio::buffer(m_buf), error);
-    			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
-                //qDebug("receive") ;
 			
-                //cnt = soc->receive(boost::asio::buffer(m_buf));
-					
-                //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
-		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
+	    		cnt = soc->receive(boost::asio::buffer(m_buf));
 
                 std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
                 std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
@@ -215,10 +207,12 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 
 
 				if (error == boost::asio::error::eof)
-    				break; // Connection closed cleanly by peer.
+				{
+					printf("Receive : eof EOF : cnt(%d)\n", cnt) ;
+    				//break; // Connection closed cleanly by peer.
+				}
 	    		else if (error)
                 {
-                    //qDebug("read_some error 2") ;
                     throw boost::system::system_error(error); // Some other error.
 
                     break ;
@@ -230,7 +224,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 
 				m_mutex.unlock();
 
-				//LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+				printf("Exception Receive : %s\n", e.what()) ;
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
 			
@@ -392,6 +386,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
+
                 //cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
@@ -417,11 +412,13 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
                     return ENSEMBLE_ERROR_SOCKET_READ;
                 }
 
-
+				//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+    			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+                //qDebug("receive") ;
+                //cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
-				
 				
 				if (error == boost::asio::error::eof)
 				{

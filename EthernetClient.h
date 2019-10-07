@@ -41,6 +41,7 @@ public:
     tcp::socket *GetSocketPointer(void) ;
     deadline_timer *GetTimerPointer(void) ;
 	std::string GetClinetIpAddress(void) ;
+	void Shutdown(void) ;
 
 private:
 	//int client_socket;
