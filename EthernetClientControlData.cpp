@@ -139,7 +139,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	{
        int ret = soc->send(boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index))) ;
 
-       qDebug("send ret = %d, index= %d, command=%d", ret, index, command) ;
+       //qDebug("send ret = %d, index= %d, command=%d", ret, index, command) ;
 
         //boost::asio::write(*soc, boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index)));
     }
@@ -344,7 +344,7 @@ void CEthernetClientControlData::OnAsyncReceive(const boost::system::error_code&
     cout << "receiving..." << endl;
     if (ErrorCode == 0)
     {
-        qDebug("Receive size = %d", bytes_transferred) ;
+        //qDebug("Receive size = %d", bytes_transferred) ;
     }
     else
     {
@@ -358,8 +358,6 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
-
-    qDebug("Receive 1") ;
 
 	m_mutex.lock();
 	unsigned char* buf = NULL;
@@ -402,7 +400,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 
                 if( sec.count() > 10 )
                 {
-                    qDebug("receive time out , sec=%d", sec) ;
+                    //qDebug("receive time out , sec=%d", sec) ;
 
                     m_cls_check_data.init_variable();
 
@@ -422,13 +420,13 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 				
 				if (error == boost::asio::error::eof)
 				{
-                    qDebug("Exception Receive : EOF\n") ;
+                    //qDebug("Exception Receive : EOF\n") ;
     				break; // Connection closed cleanly by peer.
 				}
 	    		else if (error)
 	    		{
                     //break ;
-                    qDebug("read_some error") ;
+                    //qDebug("read_some error") ;
                     throw boost::system::system_error(error); // Some other error.
 	    		}
             }
@@ -437,7 +435,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
                 m_cls_check_data.init_variable();
 				m_mutex.unlock();
 
-                qDebug("Exception Receive : %s", e.what()) ;
+                //qDebug("Exception Receive : %s", e.what()) ;
 				
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }

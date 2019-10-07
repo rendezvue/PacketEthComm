@@ -12,8 +12,6 @@
 
 #include <chrono>
 
-//#include <qdebug.h>
-
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -30,8 +28,6 @@
 
 //#define COMMAND_BUF_SIZE	1024
 #define DATA_BUF_SIZE	1000000*100		//100Mega //////20Mega * 3(RGB) = 60Mega
-
-#include <QDebug>
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;
