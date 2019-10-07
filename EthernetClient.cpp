@@ -100,53 +100,49 @@ int CEthernetClient::Open(const char* ip, unsigned int port)
 {
 	boost::system::error_code ec;
 
-	if( m_s )
-	{
-		printf("Already Connect\n") ;
-		return ENSEMBLE_ERROR_ALREADY_CONNECT ;
-	}
-
 	tcp::acceptor* p_acceptor = CEthernetGetInfo::getInstance()->GetAcceptoer() ;
-	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
+    boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
 
-	m_s = new tcp::socket(*p_io_service);
-    m_timer = new deadline_timer(*p_io_service);
+	if( m_s == NULL )       m_s = new tcp::socket(*p_io_service);
+    if( m_timer == NULL )   m_timer = new deadline_timer(*p_io_service);
+	
+	if( !m_s->is_open() )
+    {
+    	std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+		 
+        do
+        {
+            try
+            {
+                if( m_s->is_open() )
+                {
+                    break ;
+                }
 
-    //boost::asio::deadline_timer timer(io, boost::posix_time::seconds(1));
+                m_s->async_connect(tcp::endpoint(ip::address::from_string(ip), port), boost::bind(&CEthernetClient::handle_connect, this, boost::asio::placeholders::error));
+                //m_s->async_connect(tcp::endpoint(ip::address::from_string(ip), port), boost::bind(&CEthernetClient::handle_connect));
 
+            }
+            catch (boost::system::system_error const &e)
+            {
+                //cout << "Warning : could not connect : " << e.what() << endl;
+                //Close();
+                Release() ;
 
-	//boost::asio::connect(*m_s, m_resolver->resolve({ ip, "4000" }), ec);
-	//boost::asio::connect(*m_s, m_resolver->resolve({ ip, std::to_string(port) }), ec);
-	try
-	{
-		m_s->async_connect(tcp::endpoint(ip::address::from_string(ip), port), boost::bind(&CEthernetClient::handle_connect, this, boost::asio::placeholders::error));
-		//m_s->async_connect(tcp::endpoint(ip::address::from_string(ip), port), boost::bind(&CEthernetClient::handle_connect));
+                return ENSEMBLE_ERROR_SOCKET_CONNECT;
+            }
 
-		m_timer->expires_from_now(boost::posix_time::seconds(3));
-		m_timer->async_wait(boost::bind(&CEthernetClient::Close, this));
+			
+			std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
+			std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
 
-		do {
-			p_io_service->run_one();
-		} while (ec == boost::asio::error::would_block);
-		if (ec || !m_s->is_open() || TimeOut == 1)
-		{
-			//cout << "error happend in socket connect" << endl;
-			m_s->close();
-			Release() ;
+			if( sec.count() > 3 )		//3 second
+			{
+				Release() ;
 
-			TimeOut = 0;
-
-			return ENSEMBLE_ERROR_SOCKET_CONNECT;
-		}
-		m_timer->cancel();
-	}
-	catch (boost::system::system_error const &e)
-	{
-		//cout << "Warning : could not connect : " << e.what() << endl;
-		//Close();
-		Release() ;
-		
-		return ENSEMBLE_ERROR_SOCKET_CONNECT;
+                return ENSEMBLE_ERROR_SOCKET_CONNECT;
+			}
+        }while(1) ;
 	}
 
 	return ENSEMBLE_SUCCESS;
