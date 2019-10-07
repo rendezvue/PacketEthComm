@@ -220,12 +220,22 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 				{
 					printf("Receive : eof EOF : cnt(%d)\n", cnt) ;
     				//break; // Connection closed cleanly by peer.
+
+					m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+
+					return ENSEMBLE_ERROR_SOCKET_READ;
 				}
 	    		else if (error)
                 {
                     throw boost::system::system_error(error); // Some other error.
 
-                    break ;
+					m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+
+					return ENSEMBLE_ERROR_SOCKET_READ;
                 }
             }
             catch(exception& e)
@@ -395,6 +405,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	do
 	{
         //int rev_count = 0 ;
+        bool b_exit_error = 0 ;
 		do
 		{
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
@@ -438,13 +449,24 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 				if (error == boost::asio::error::eof)
 				{
                     //qDebug("Exception Receive : EOF\n") ;
-    				break; // Connection closed cleanly by peer.
+    				//break; // Connection closed cleanly by peer.
+    				m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+					
+    				return ENSEMBLE_ERROR_SOCKET_READ;
 				}
 	    		else if (error)
 	    		{
                     //break ;
                     //qDebug("read_some error") ;
                     throw boost::system::system_error(error); // Some other error.
+
+					m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+
+					return ENSEMBLE_ERROR_SOCKET_READ;
 	    		}
             }
             catch(exception& e)
