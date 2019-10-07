@@ -40,6 +40,7 @@ public:
 
 	tcp::socket *GetSocketPointer(void) ;
 	std::string GetClinetIpAddress(void) ;
+	void Shutdown(void) ;
 
 private:
 	//int client_socket;

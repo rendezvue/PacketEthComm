@@ -190,10 +190,24 @@ void CEthernetClient::Close()
 	m_resolver = NULL;
 	m_io_service = NULL;
 	*/
+
+	Shutdown() ;
 }
 
 tcp::socket *CEthernetClient::GetSocketPointer(void)
 {
 	return  m_s; 
 }
+
+void CEthernetClient::Shutdown(void)
+{
+	if( m_s )
+	{
+		m_s->shutdown(boost::asio::socket_base::shutdown_both);
+		
+		m_s->close();
+		Release() ;
+	}
+}
+
 
