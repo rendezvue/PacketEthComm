@@ -61,6 +61,11 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
 
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
+	}
+
 	m_mutex.lock();
 
 	int ret = ENSEMBLE_SUCCESS ;
@@ -163,6 +168,11 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
 
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
+	}
+	
 	m_mutex.lock();
 	
 	unsigned char* buf = NULL;
@@ -357,6 +367,11 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	if (soc == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
+	}
+
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
 	}
 
 	m_mutex.lock();
@@ -554,6 +569,11 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
 
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
+	}
+	
 	m_mutex.lock();
 	
 	unsigned int index = 0 ;
@@ -634,6 +654,11 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	if (soc == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
+	}
+
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
 	}
 
 	m_mutex.lock();
@@ -792,6 +817,11 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 	{
 		*out_data_size = 0;
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
+	}
+
+	if( !soc->is_open() )
+	{
+		return ENSEMBLE_ERROR_SOCKET_CONNECT ;
 	}
 
 	m_mutex.lock();
