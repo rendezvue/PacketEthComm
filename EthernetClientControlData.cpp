@@ -124,7 +124,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	m_p_command[index++] = 'S';
 	m_p_command[index++] = 'B';
 	m_p_command[index++] = ']';
-    //m_p_command[index] = 0;
+   //m_p_command[index++] = 0;
 
 	//send(client_socket, &command, sizeof(command), 0);
 	//printf("sizeof(m_command) = %d\n", sizeof(m_command));
@@ -137,7 +137,11 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	//printf("m_command[1] = %d\n", m_command[1]);
     try
 	{
-   		boost::asio::write(*soc, boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index)));
+       int ret = soc->send(boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index))) ;
+
+       qDebug("send ret = %d, index= %d, command=%d", ret, index, command) ;
+
+        //boost::asio::write(*soc, boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index)));
     }
     catch(exception& e)
     {
@@ -174,6 +178,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 	//-----
 	m_cls_check_data.init_variable();
 
+    std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+
 	//do
 	//{
         //int rev_count = 0 ;
@@ -183,19 +189,40 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+                //soc->async_receive(boost::asio::buffer(buf, 1024), boost::bind(&CEthernetClientControlData::OnAsyncReceive, this, boost::asio::placeholders::error));
+                soc->async_read_some(boost::asio::buffer(buf, DEFAULT_BUFLEN2), boost::bind(&CEthernetClientControlData::OnAsyncReceive, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+                //cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		//cnt = soc->receive(boost::asio::buffer(m_buf));
+                //cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
 
+                std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
+                std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+
+                if( sec.count() > 10 )
+                {
+                    m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+
+                    //LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+                    return ENSEMBLE_ERROR_SOCKET_READ;
+                }
+
+
 				if (error == boost::asio::error::eof)
     				break; // Connection closed cleanly by peer.
 	    		else if (error)
-		    		throw boost::system::system_error(error); // Some other error.
+                {
+                    //qDebug("read_some error 2") ;
+                    throw boost::system::system_error(error); // Some other error.
+
+                    break ;
+                }
             }
             catch(exception& e)
             {
@@ -318,12 +345,27 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
     return  get_command ;
 }
 
+void CEthernetClientControlData::OnAsyncReceive(const boost::system::error_code& ErrorCode, std::size_t bytes_transferred )
+{
+    cout << "receiving..." << endl;
+    if (ErrorCode == 0)
+    {
+        qDebug("Receive size = %d", bytes_transferred) ;
+    }
+    else
+    {
+        cout << "ERROR! OnReceive..." << endl;
+    }
+}
+
 int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int command, std::vector<float>* out_receive_data) 
 {	
 	if (soc == NULL)
 	{
 		return ENSEMBLE_ERROR_INVALID_MEMORY;
 	}
+
+    qDebug("Receive 1") ;
 
 	m_mutex.lock();
 	unsigned char* buf = NULL;
@@ -338,6 +380,9 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	// 1. Get Command(Check Command)
 	//-----
 	m_cls_check_data.init_variable();
+
+    std::chrono::system_clock::time_point start_time = std::chrono::system_clock::now();
+
 	do
 	{
         //int rev_count = 0 ;
@@ -347,11 +392,32 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+                //cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		//cnt = soc->receive(boost::asio::buffer(m_buf));
+                cnt = soc->receive(boost::asio::buffer(m_buf));
+
+                //soc->async_read_some(boost::asio::buffer(buf, DEFAULT_BUFLEN2), boost::bind(&CEthernetClientControlData::OnAsyncReceive, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+
+                std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
+                std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+
+                //qDebug("receive time out , sec=%d", sec) ;
+
+                if( sec.count() > 10 )
+                {
+                    qDebug("receive time out , sec=%d", sec) ;
+
+                    m_cls_check_data.init_variable();
+
+                    m_mutex.unlock();
+
+                    //LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+                    return ENSEMBLE_ERROR_SOCKET_READ;
+                }
+
+
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
@@ -359,12 +425,14 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 				
 				if (error == boost::asio::error::eof)
 				{
-					//printf("Exception Receive : EOF\n") ;
+                    qDebug("Exception Receive : EOF\n") ;
     				break; // Connection closed cleanly by peer.
 				}
 	    		else if (error)
 	    		{
-		    		throw boost::system::system_error(error); // Some other error.
+                    //break ;
+                    qDebug("read_some error") ;
+                    throw boost::system::system_error(error); // Some other error.
 	    		}
             }
             catch(exception& e)
@@ -372,7 +440,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
                 m_cls_check_data.init_variable();
 				m_mutex.unlock();
 
-				//LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+                qDebug("Exception Receive : %s", e.what()) ;
 				
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
@@ -539,7 +607,7 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	m_p_command[index++] = 'S';
 	m_p_command[index++] = 'B';
 	m_p_command[index++] = ']';
-    //m_p_command[index] = 0;
+    //m_p_command[index++] = 0;
 
 	//send(client_socket, &command, sizeof(command), 0);
 	//printf("sizeof(m_command) = %d\n", sizeof(m_command));
@@ -595,11 +663,11 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+                cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		cnt = soc->receive(boost::asio::buffer(m_buf));
+                //cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
@@ -779,7 +847,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 	m_p_command[index++] = 'S';
 	m_p_command[index++] = 'B';
 	m_p_command[index++] = ']';
-    //m_p_command[index] = 0;
+    //m_p_command[index++] = 0;
 
 	//send(client_socket, &command, sizeof(command), 0);
 	//printf("sizeof(m_command) = %d\n", sizeof(m_command));
@@ -826,11 +894,11 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
-				//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
+                cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
 			
-	    		cnt = soc->receive(boost::asio::buffer(m_buf));
+                //3cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);

@@ -38,7 +38,8 @@ public:
 	void Release(void) ;
 	int handle_connect(const boost::system::error_code& err);
 
-	tcp::socket *GetSocketPointer(void) ;
+    tcp::socket *GetSocketPointer(void) ;
+    deadline_timer *GetTimerPointer(void) ;
 	std::string GetClinetIpAddress(void) ;
 
 private:

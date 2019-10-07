@@ -110,7 +110,9 @@ int CEthernetClient::Open(const char* ip, unsigned int port)
 	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
 
 	m_s = new tcp::socket(*p_io_service);
-	m_timer = new deadline_timer(*p_io_service);
+    m_timer = new deadline_timer(*p_io_service);
+
+    //boost::asio::deadline_timer timer(io, boost::posix_time::seconds(1));
 
 
 	//boost::asio::connect(*m_s, m_resolver->resolve({ ip, "4000" }), ec);
@@ -195,5 +197,10 @@ void CEthernetClient::Close()
 tcp::socket *CEthernetClient::GetSocketPointer(void)
 {
 	return  m_s; 
+}
+
+deadline_timer *CEthernetClient::GetTimerPointer(void)
+{
+    return m_timer ;
 }
 

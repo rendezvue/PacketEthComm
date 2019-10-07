@@ -10,6 +10,8 @@
 #include <iostream>
 #include <stdint.h>
 
+#include <chrono>
+
 //#include <qdebug.h>
 
 #include <boost/asio.hpp>
@@ -28,6 +30,8 @@
 
 //#define COMMAND_BUF_SIZE	1024
 #define DATA_BUF_SIZE	1000000*100		//100Mega //////20Mega * 3(RGB) = 60Mega
+
+#include <QDebug>
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;
@@ -52,7 +56,6 @@ public:
 	int ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data) ;
 	
 	int Send(tcp::socket *soc, unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor);
-
 private:
 
 	/**
@@ -79,6 +82,9 @@ private:
 	unsigned int m_ui_command_size ;
 
 	boost::mutex m_mutex;
+
+    //
+    void OnAsyncReceive(const boost::system::error_code& ErrorCode, std::size_t bytes_transferred ) ;
 };
 
 #endif
