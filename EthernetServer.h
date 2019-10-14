@@ -1,5 +1,5 @@
-#ifndef ETHERNETCLIENT_H
-#define ETHERNETCLIENT_H
+#ifndef ETHERNETSERVER_H
+#define ETHERNETSERVER_H
 
 #include <string>
 #include <sys/types.h>
@@ -24,13 +24,13 @@ using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace std;
 
-class  CEthernetClient
+class  CEthernetServer
 {
 public:
-	CEthernetClient(void);
-	~CEthernetClient(void);
+	CEthernetServer(void);
+	~CEthernetServer(void);
 
-    int Open(const char* ip, unsigned int port);
+	int Accept(void) ;
 
 	void Close();
 	void Release(void) ;
