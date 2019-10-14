@@ -244,8 +244,8 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 
 				m_mutex.unlock();
 
-				printf("Exception Receive : %s\n", e.what()) ;
-				printf("return ENSEMBLE_ERROR_SOCKET_READ\n") ;
+				//printf("Exception Receive : %s\n", e.what()) ;
+				//printf("return ENSEMBLE_ERROR_SOCKET_READ\n") ;
 				
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
