@@ -2,12 +2,16 @@
 #include "ErrorType.h"
 #include <string>
 
+bool CEthernetServer::instanceFlag = false;
+CEthernetServer* CEthernetServer::instance = NULL;
 
 CEthernetServer::CEthernetServer(void) :
-	m_s(NULL)
-	, m_timer(NULL)
+	m_timer(NULL)
 	, m_acceptor(NULL)
 {
+	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
+	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), NETWORK_PORT_CON));
+	m_timer = new deadline_timer(*p_io_service);
 }
 
 CEthernetServer::~CEthernetServer(void)
@@ -15,14 +19,19 @@ CEthernetServer::~CEthernetServer(void)
 	Release() ;
 }
 
+CEthernetServer* CEthernetServer::getInstance()
+{
+	if(instance == NULL)
+	{
+		instance = new CEthernetServer();
+		instanceFlag = true;
+	}
+	return instance;
+}
+
+
 void CEthernetServer::Release(void) 
 {
-	if (m_s != NULL)
-	{
-		delete m_s;
-		m_s = NULL;
-	}
-
 	if (m_timer != NULL)
 	{
 		delete m_timer;
@@ -36,33 +45,13 @@ void CEthernetServer::Release(void)
 	}
 }
 
-std::string CEthernetServer::GetClinetIpAddress(void)
+int CEthernetServer::Accept(tcp::socket *p_socket) 
 {
-	std::string str_ip ;
-
-	if( m_s )
+	if( p_socket == NULL )
 	{
-		str_ip =m_s->remote_endpoint().address().to_string() ;
+		return ENSEMBLE_ERROR_INVALID_MEMORY ;
 	}
 
-	return str_ip ;
-}
-int CEthernetServer::Accept(void) 
-{
-	if( m_s )
-	{
-		printf("Already Connect\n") ;
-		return ENSEMBLE_ERROR_ALREADY_CONNECT ;
-	}
-
-	//printf("Accept Func\n") ;
-	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
-
-	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), NETWORK_PORT_CON));
-	m_s = new tcp::socket(*p_io_service);	
-	m_timer = new deadline_timer(*p_io_service);
-
-	
 	try
 	{
 #if 0	
@@ -87,15 +76,15 @@ int CEthernetServer::Accept(void)
 		m_timer->cancel();
 #else
 		printf("Waiting Client..\n");
-		m_acceptor->accept((*m_s)) ;		//inf
-		cout << "Connection IP : " <<  m_s->remote_endpoint().address().to_string() << endl;
+		m_acceptor->accept((*p_socket)) ;		//inf
+		cout << "Connection IP : " <<  p_socket->remote_endpoint().address().to_string() << endl;
 #endif
 	}
 	catch (boost::system::system_error const &e)
 	{
 		//cout << "Warning : could not connect : " << e.what() << endl;
 		//Close();
-		Release() ;
+		//Release() ;
 		
 		return ENSEMBLE_ERROR_SOCKET_CONNECT;
 	}
@@ -143,26 +132,5 @@ void CEthernetServer::Close()
 	m_io_service = NULL;
 	*/
 
-	Shutdown() ;
-}
-
-tcp::socket *CEthernetServer::GetSocketPointer(void)
-{
-	return  m_s; 
-}
-
-deadline_timer *CEthernetServer::GetTimerPointer(void)
-{
-    return m_timer ;
-}
-
-void CEthernetServer::Shutdown(void)
-{
-	if( m_s )
-	{
-		//m_s->shutdown(boost::asio::socket_base::shutdown_both);
-		
-		if( m_s->is_open() ) m_s->close();
-		Release() ;
-	}
+	//Release() ;
 }
