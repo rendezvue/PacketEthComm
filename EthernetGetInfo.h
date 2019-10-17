@@ -31,7 +31,6 @@ public:
 	static CEthernetGetInfo* getInstance();
 	virtual ~CEthernetGetInfo() ;
 	
-	tcp::acceptor* GetAcceptoer(void) ;
 	boost::asio::io_service* GetIoService(void) ;
 private:
 
@@ -40,7 +39,6 @@ private:
 	static CEthernetGetInfo* instance;
 
 	boost::asio::io_service *m_io_service;
-	tcp::acceptor *m_acceptor ;	
 };
 
 #endif

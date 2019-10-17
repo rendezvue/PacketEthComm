@@ -46,6 +46,8 @@ private:
 	//SOCKET client_socket;
 	//struct sockaddr_in server_addr;
 	//boost::asio::io_service m_io_service;
+	tcp::acceptor *m_acceptor ; 
+
 	tcp::socket *m_s;
 	deadline_timer *m_timer;
 	

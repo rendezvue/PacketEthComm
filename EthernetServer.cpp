@@ -6,6 +6,7 @@
 CEthernetServer::CEthernetServer(void) :
 	m_s(NULL)
 	, m_timer(NULL)
+	, m_acceptor(NULL)
 {
 }
 
@@ -26,6 +27,12 @@ void CEthernetServer::Release(void)
 	{
 		delete m_timer;
 		m_timer = NULL;
+	}
+
+	if( m_acceptor != NULL )
+	{
+		delete m_acceptor ;
+		m_acceptor = NULL;
 	}
 }
 
@@ -49,9 +56,9 @@ int CEthernetServer::Accept(void)
 	}
 
 	//printf("Accept Func\n") ;
-	tcp::acceptor* p_acceptor = CEthernetGetInfo::getInstance()->GetAcceptoer() ;
 	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
-		
+
+	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), NETWORK_PORT_CON));
 	m_s = new tcp::socket(*p_io_service);	
 	m_timer = new deadline_timer(*p_io_service);
 
@@ -80,7 +87,7 @@ int CEthernetServer::Accept(void)
 		m_timer->cancel();
 #else
 		printf("Waiting Client..\n");
-		p_acceptor->accept((*m_s)) ;		//inf
+		m_acceptor->accept((*m_s)) ;		//inf
 		cout << "Connection IP : " <<  m_s->remote_endpoint().address().to_string() << endl;
 #endif
 	}
