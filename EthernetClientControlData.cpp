@@ -364,7 +364,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 void CEthernetClientControlData::OnAsyncReceive(const boost::system::error_code& ErrorCode, std::size_t bytes_transferred )
 {
     cout << "receiving..." << endl;
-    if (ErrorCode == 0)
+    if (ErrorCode == boost::system::errc::success )
     {
         //qDebug("Receive size = %d", bytes_transferred) ;
     }
