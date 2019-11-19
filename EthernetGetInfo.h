@@ -17,7 +17,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include "EnsembleCommon.h"
-#include "EthernetGetInfo.h" ;
+#include "EthernetGetInfo.h"
 
 using namespace boost::asio;
 using boost::asio::ip::tcp;

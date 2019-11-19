@@ -211,7 +211,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 
                     m_mutex.unlock();
 
-                    //LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+                    //LOG(REV_LOG_VISION, "Exception Receive : %s", e.what()) ;
                     return ENSEMBLE_ERROR_SOCKET_READ;
                 }
 
@@ -434,7 +434,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 
                     m_mutex.unlock();
 
-                    //LOG(LOG_VISION, "Exception Receive : %s", e.what()) ;
+                    //LOG(REV_LOG_VISION, "Exception Receive : %s", e.what()) ;
                     return ENSEMBLE_ERROR_SOCKET_READ;
                 }
 

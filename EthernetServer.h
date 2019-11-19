@@ -16,7 +16,7 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include "EthernetGetInfo.h" ;
+#include "EthernetGetInfo.h"
 
 #define PORT "4000"
 
