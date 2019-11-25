@@ -23,6 +23,9 @@
 
 #include "RendezvueCheckData.h"
 
+#include "opencv2/opencv.hpp"
+
+
 #define DEFAULT_BUFLEN 4096
 #define DEFAULT_BUFLEN2 1024
 
@@ -48,6 +51,7 @@ public:
 	int Receive(tcp::socket *soc, const unsigned int command, std::vector<float>* out_receive_data) ;
 	int Receive(tcp::socket *soc, std::string *out_str_id, std::vector<float>* out_receive_data) ;
 
+	int SendImage(tcp::socket *soc, const unsigned int command, cv::Mat image) ;
 	int SendImage(tcp::socket *soc, const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len);
 	int ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data) ;
 	
