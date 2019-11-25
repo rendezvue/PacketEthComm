@@ -932,7 +932,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	m_cls_check_data.init_variable();
 
 	m_mutex.unlock();
-    return  ENSEMBLE_SUCCESS ;
+    return  data_length ;
 }
 
 int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor )
