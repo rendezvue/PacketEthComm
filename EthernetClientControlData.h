@@ -25,13 +25,15 @@
 
 #include "opencv2/opencv.hpp"
 
+#include "EnsembleCommon.h"
+
 
 #define DEFAULT_BUFLEN 4096
 #define DEFAULT_BUFLEN2 1024
 
 //#define COMMAND_BUF_SIZE	1024
 #define DATA_BUF_SIZE	1000000*100		//100Mega //////20Mega * 3(RGB) = 60Mega
-
+						
 using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace std;

@@ -19,7 +19,7 @@ CEthernetClientControlData::~CEthernetClientControlData(void)
 {
 	if(m_p_command != NULL )
 	{
-		delete m_p_command ;
+		delete [] m_p_command ;
 		m_p_command = NULL ;
 	}
 }
@@ -599,6 +599,12 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	}
 	
 	m_mutex.lock();
+
+	std::vector<uchar> buf( image.rows * image.cols );
+    std::vector<int> params = { cv::IMWRITE_JPEG_QUALITY, 95 };
+	cv::imencode( ".jpg", image, buf, params );
+
+	unsigned char *s = const_cast<unsigned char*>(reinterpret_cast<const unsigned char *>(buf.data()));
 	
 	unsigned int index = 0 ;
 	m_p_command[index++] = '[';
@@ -626,19 +632,21 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	m_p_command[index++] = (unsigned char)(((height) & 0x000000FF));
 
 	//image type
-	const int image_type = image.type() ;
+	const int image_type = ImageTypeOption::IMAGE_JPG ;
 	m_p_command[index++] = (unsigned char)((image_type & 0xFF000000) >> 24);
 	m_p_command[index++] = (unsigned char)((image_type & 0x00FF0000) >> 16);
 	m_p_command[index++] = (unsigned char)((image_type & 0x0000FF00) >> 8);
 	m_p_command[index++] = (unsigned char)((image_type & 0x000000FF));
 
 	//buf data len
-	const int buf_len = image.total()*image.elemSize() ; 
+	//const int buf_len = image.total()*image.elemSize() ; 
+	const int buf_len = buf.size() ; 
 	m_p_command[index++] = (unsigned char)((buf_len & 0xFF000000) >> 24);
 	m_p_command[index++] = (unsigned char)((buf_len & 0x00FF0000) >> 16);
 	m_p_command[index++] = (unsigned char)((buf_len & 0x0000FF00) >> 8);
 	m_p_command[index++] = (unsigned char)((buf_len & 0x000000FF));
 
+#if 0
 	//image buf
     if( !image.empty() && buf_len > 0)
     {	
@@ -654,7 +662,14 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 			index += copy_sie ;
 		}
     }
-	
+#else
+	if( !image.empty() && buf_len > 0)
+    {
+    	memcpy(m_p_command + index, s, buf_len);	
+		index += buf_len ;
+	}
+#endif
+
 	m_p_command[index++] = 'E';
 	m_p_command[index++] = 'S';
 	m_p_command[index++] = 'B';
