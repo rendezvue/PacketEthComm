@@ -83,6 +83,9 @@ private:
 	unsigned char *m_p_command ;
 	unsigned int m_ui_command_size ;
 
+	//use jpg
+	std::vector<uchar> m_jpg_buf ;
+		
 	boost::mutex m_mutex;
 
     //
