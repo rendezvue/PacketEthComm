@@ -600,9 +600,17 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	
 	m_mutex.lock();
 
-	std::vector<uchar> buf( image.rows * image.cols );
-    std::vector<int> params = { cv::IMWRITE_JPEG_QUALITY, 95 };
-	cv::imencode( ".jpg", image, buf, params );
+	if( image.empty() )
+	{
+		m_jpg_buf.clear() ;	    
+	}
+	else
+	{
+		m_jpg_buf.resize(image.rows * image.cols) ;
+
+		std::vector<int> params = { cv::IMWRITE_JPEG_QUALITY, 95 };
+		cv::imencode( ".jpg", image, m_jpg_buf, params );
+	}
 
 	unsigned char *s = const_cast<unsigned char*>(reinterpret_cast<const unsigned char *>(buf.data()));
 	
@@ -640,7 +648,7 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 
 	//buf data len
 	//const int buf_len = image.total()*image.elemSize() ; 
-	const int buf_len = buf.size() ; 
+	const int buf_len = m_jpg_buf.size() ; 
 	m_p_command[index++] = (unsigned char)((buf_len & 0xFF000000) >> 24);
 	m_p_command[index++] = (unsigned char)((buf_len & 0x00FF0000) >> 16);
 	m_p_command[index++] = (unsigned char)((buf_len & 0x0000FF00) >> 8);
