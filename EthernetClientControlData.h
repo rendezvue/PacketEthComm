@@ -55,7 +55,7 @@ public:
 
 	int SendImage(tcp::socket *soc, const unsigned int command, cv::Mat image) ;
 	int SendImage(tcp::socket *soc, const unsigned int command, const int width, const int height, const int image_type, unsigned char* image_buf, const int buf_len);
-	int ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data) ;
+	int ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data, int *out_type_option) ;
 	
 	int Send(tcp::socket *soc, unsigned int command, unsigned char* send_data, const unsigned int send_data_size, const unsigned int send_scalefactor, unsigned char** out_data, int* out_data_size, unsigned int* out_scalefactor);
 private:

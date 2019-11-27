@@ -788,7 +788,7 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	return  ENSEMBLE_SUCCESS ;
 }
 
-int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data)
+int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data, int *out_type_option)
 {
 	if (soc == NULL)
 	{
@@ -891,15 +891,17 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	//-------------------------------------------------------------------------------------------
 	// 4. image type
 	//-----
-	unsigned int image_cv_type = 0 ;
+	unsigned int image_type = 0 ;
 	i_get_data = (unsigned int)buf[index++];
-	image_cv_type = (i_get_data << 24) & 0xFF000000;
+	image_type = (i_get_data << 24) & 0xFF000000;
 	i_get_data = (unsigned int)buf[index++];
-	image_cv_type |= (i_get_data << 16) & 0x00FF0000;
+	image_type |= (i_get_data << 16) & 0x00FF0000;
 	i_get_data = (unsigned int)buf[index++];
-	image_cv_type |= (i_get_data << 8) & 0x0000FF00;
+	image_type |= (i_get_data << 8) & 0x0000FF00;
 	i_get_data = (unsigned int)buf[index++];
-	image_cv_type |= (i_get_data) & 0x000000FF;
+	image_type |= (i_get_data) & 0x000000FF;
+
+	if( out_type_option ) (*out_type_option) = image_type ;
 
 	//-------------------------------------------------------------------------------------------
 	// 5. image raw data length
