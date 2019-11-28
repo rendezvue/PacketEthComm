@@ -86,7 +86,8 @@ private:
 	//use jpg
 	std::vector<uchar> m_jpg_buf ;
 		
-	boost::mutex m_mutex;
+	boost::mutex m_mutex_recv;
+	boost::mutex m_mutex_send;
 
     //
     void OnAsyncReceive(const boost::system::error_code& ErrorCode, std::size_t bytes_transferred ) ;
