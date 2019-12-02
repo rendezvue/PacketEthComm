@@ -6,8 +6,8 @@ bool CEthernetServer::instanceFlag = false;
 CEthernetServer* CEthernetServer::instance = NULL;
 
 CEthernetServer::CEthernetServer(void) :
-	m_timer(NULL)
-	, m_acceptor(NULL)
+	m_acceptor(NULL)
+	, m_timer(NULL)
 {
 	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
 	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), NETWORK_PORT_CON));

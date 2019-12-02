@@ -69,8 +69,6 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	m_mutex_send.lock();
 
 	int ret = ENSEMBLE_SUCCESS ;
-	int cnt = 0;
-	
 
 	int data_count = 0 ;
 	if( p_vec_send_data )	data_count = p_vec_send_data->size() ;
@@ -142,7 +140,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, const unsigned int comman
 	//printf("m_command[1] = %d\n", m_command[1]);
     try
 	{
-       int ret = soc->send(boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index))) ;
+       ret = soc->send(boost::asio::buffer(m_p_command, sizeof(unsigned char)*(index))) ;
 
        //qDebug("send ret = %d, index= %d, command=%d", ret, index, command) ;
 
@@ -334,7 +332,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 			if( out_receive_data->size() > 0 ) out_receive_data->clear() ;
 			out_receive_data->resize(data_length) ;
 
-			for( int i=0 ; i<data_length ; i++ )
+			for( unsigned int i=0 ; i<data_length ; i++ )
 			{
 				int i_get_data_value = 0 ;
 				
@@ -390,7 +388,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	unsigned char* buf = NULL;
 	int buf_size = 0 ;
 
-	int get_command = -1;
+	unsigned int get_command = 0;
 	int index = 0 ;
 	unsigned int i_get_data = 0 ;
 	int cnt = 0;
@@ -405,7 +403,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 	do
 	{
         //int rev_count = 0 ;
-        bool b_exit_error = 0 ;
+        //bool b_exit_error = 0 ;
 		do
 		{
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
@@ -560,7 +558,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, const unsigned int com
 			if( out_receive_data->size() > 0 ) out_receive_data->clear() ;
 			out_receive_data->resize(data_length) ;
 
-			for( int i=0 ; i<data_length ; i++ )
+			for( unsigned int i=0 ; i<data_length ; i++ )
 			{
 				int i_get_data_value = 0 ;
 				
@@ -813,7 +811,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	unsigned char* buf = NULL;
 	int buf_size = 0 ;
 
-	int get_command = -1;
+	unsigned int get_command = 0;
 	int index = 0 ;
 	unsigned int i_get_data = 0 ;
 	int cnt = 0;
@@ -936,7 +934,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 		{
 			if( (*out_data) )
 			{
-				if( image_width != width || image_height != height )
+				if( (int)image_width != width || (int)image_height != height )
 				{
 					delete [] (*out_data) ;
 					(*out_data) = NULL ;
@@ -1052,7 +1050,7 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
     unsigned char* buf = NULL;
 	int buf_size = 0 ;
 
-	int get_command = -1;
+	unsigned int get_command = 0;
 	index = 0 ;
 	unsigned int i_get_data = 0 ;
 
