@@ -2,6 +2,9 @@
 #include "ErrorType.h"
 #include <string>
 
+#include "RendezvueGetPortNum.h"
+
+
 bool CEthernetServer::instanceFlag = false;
 CEthernetServer* CEthernetServer::instance = NULL;
 
@@ -9,8 +12,11 @@ CEthernetServer::CEthernetServer(void) :
 	m_acceptor(NULL)
 	, m_timer(NULL)
 {
+	CRendezvueGetPortNum cls_get_port_number ;
+	int port_num = cls_get_port_number.GetPortNum() ;
+	
 	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
-	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), NETWORK_PORT_CON));
+	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), port_num));
 	m_timer = new deadline_timer(*p_io_service);
 }
 
