@@ -12,8 +12,8 @@ CEthernetServer::CEthernetServer(void) :
 	m_acceptor(NULL)
 	, m_timer(NULL)
 {
-	CRendezvueGetPortNum cls_get_port_number ;
-	int port_num = cls_get_port_number.GetPortNum() ;
+	
+	int port_num = CRendezvueGetPortNum::getInstance()->GetPortNum() ;
 	
 	boost::asio::io_service* p_io_service = CEthernetGetInfo::getInstance()->GetIoService() ;
 	m_acceptor = new tcp::acceptor(*p_io_service, tcp::endpoint(tcp::v4(), port_num));

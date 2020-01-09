@@ -18,8 +18,6 @@
 
 #include "EthernetGetInfo.h"
 
-#define PORT "4000"
-
 using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace std;
