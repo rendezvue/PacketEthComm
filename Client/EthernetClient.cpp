@@ -1,6 +1,7 @@
 #include "EthernetClient.h"
 #include "ErrorType.h"
 #include <string>
+#include <chrono>
 
 
 CEthernetClient::CEthernetClient(void) :
