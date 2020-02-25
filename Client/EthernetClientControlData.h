@@ -27,6 +27,8 @@
 
 #include "EnsembleCommon.h"
 
+#include <qdebug.h>
+
 
 #define DEFAULT_BUFLEN 4096
 #define DEFAULT_BUFLEN2 1024

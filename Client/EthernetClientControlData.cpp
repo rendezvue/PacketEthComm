@@ -829,17 +829,23 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 			//cnt = recv(client_socket, m_buf, DEFAULT_BUFLEN, 0);
             try{
 			    boost::system::error_code error;
+
                 cnt = soc->read_some(boost::asio::buffer(m_buf), error);
     			//cnt = soc->read_some(boost::asio::buffer(m_buf), error);
                 //qDebug("receive") ;
-			
+				
                 //cnt = soc->receive(boost::asio::buffer(m_buf));
 					
                 //printf("receive size = %d(%d)\n", cnt, rev_count++) ;
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
 
 				if (error == boost::asio::error::eof)
-    				break; // Connection closed cleanly by peer.
+				{
+					m_cls_check_data.init_variable();
+					m_mutex_recv.unlock();
+				
+    				return ENSEMBLE_ERROR_SOCKET_READ_EOF; // Connection closed cleanly by peer.
+				}
 	    		else if (error)
 		    		throw boost::system::system_error(error); // Some other error.
             }
@@ -849,7 +855,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 				m_mutex_recv.unlock();
                 return ENSEMBLE_ERROR_SOCKET_READ;
             }
-			
+
 			//int out_size = 0;
             buf = m_cls_check_data.FindData(m_buf, cnt, &buf_size);
 		} while (buf == NULL);
@@ -863,7 +869,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 		get_command |= (i_get_data << 8) & 0x0000FF00;
 		i_get_data = (unsigned int)buf[index++];
 		get_command |= (i_get_data) & 0x000000FF;
-	
+
 	} while (get_command != command);
 	
 	//-------------------------------------------------------------
@@ -952,7 +958,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 			height = image_height ;
 		}
 	}
-	
+
 	m_cls_check_data.init_variable();
 
 	m_mutex_recv.unlock();
@@ -1077,7 +1083,12 @@ int CEthernetClientControlData::Send(tcp::socket *soc, unsigned int command, uns
 		    	//cnt = soc->async_read_some(boost::asio::buffer(m_buf), error);
 
 				if (error == boost::asio::error::eof)
-    				break; // Connection closed cleanly by peer.
+				{
+					m_cls_check_data.init_variable();
+					m_mutex_send.unlock();
+				
+    				return ENSEMBLE_ERROR_SOCKET_READ_EOF; // Connection closed cleanly by peer.
+				}
 	    		else if (error)
 		    		throw boost::system::system_error(error); // Some other error.
             }
