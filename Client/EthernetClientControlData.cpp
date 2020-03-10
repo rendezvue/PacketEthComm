@@ -934,9 +934,6 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	//-------------------------------------------------------------------------------------------
 	// 7. data copy
 	//-----
-	int width_ = width ;
-	int height_ = height ;
-
 	width= 0 ;
 	height=0 ;
 	if( data_length > 0 )
