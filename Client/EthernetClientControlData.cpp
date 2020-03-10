@@ -795,7 +795,7 @@ int CEthernetClientControlData::SendImage(tcp::socket *soc, const unsigned int c
 	return  ENSEMBLE_SUCCESS ;
 }
 
-int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, unsigned char** out_data, int *out_type_option)
+int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned int command, int& width, int& height, ImageBuf* p_buf)
 {
 	if (soc == NULL)
 	{
@@ -914,7 +914,7 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	i_get_data = (unsigned int)buf[index++];
 	image_type |= (i_get_data) & 0x000000FF;
 
-	if( out_type_option ) (*out_type_option) = image_type ;
+    if( p_buf ) (*p_buf).image_type = image_type ;
 
 	//-------------------------------------------------------------------------------------------
 	// 5. image raw data length
@@ -934,29 +934,40 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	//-------------------------------------------------------------------------------------------
 	// 7. data copy
 	//-----
+	int width_ = width ;
+	int height_ = height ;
+
+	width= 0 ;
+	height=0 ;
 	if( data_length > 0 )
 	{
-		if( out_data != NULL )
-		{
-			if( (*out_data) )
-			{
-				if( (int)image_width != width || (int)image_height != height )
-				{
-					delete [] (*out_data) ;
-					(*out_data) = NULL ;
-				}
-			}
+        if( p_buf )
+        {
+            if( (*p_buf).p_buf != NULL )
+            {
+                if( (*p_buf).p_buf )
+                {
+                    if( (*p_buf).buf_length != data_length )
+                    {
+                        delete [] (*p_buf).p_buf ;
+                        (*p_buf).p_buf = NULL ;
 
-			if( (*out_data) == NULL )
-			{
-				(*out_data) = new unsigned char[data_length];
-			}
+                        (*p_buf).buf_length = 0 ;
+                    }
+                }
 
-			memcpy((*out_data), buf+index, data_length);
+                if( (*p_buf).p_buf == NULL )
+                {
+                    (*p_buf).buf_length = data_length ;
+                    (*p_buf).p_buf = new unsigned char[(*p_buf).buf_length];
+                }
 
-			width = image_width ;
-			height = image_height ;
-		}
+                memcpy((*p_buf).p_buf, buf+index, data_length);
+
+                width = image_width ;
+                height = image_height ;
+            }
+        }
 	}
 
 	m_cls_check_data.init_variable();
