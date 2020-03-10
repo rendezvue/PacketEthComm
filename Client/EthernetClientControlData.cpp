@@ -943,30 +943,27 @@ int CEthernetClientControlData::ReceiveImage(tcp::socket *soc, const unsigned in
 	{
         if( p_buf )
         {
-            if( (*p_buf).p_buf != NULL )
+            if( (*p_buf).p_buf )
             {
-                if( (*p_buf).p_buf )
+                if( (*p_buf).buf_length != data_length )
                 {
-                    if( (*p_buf).buf_length != data_length )
-                    {
-                        delete [] (*p_buf).p_buf ;
-                        (*p_buf).p_buf = NULL ;
+                    delete [] (*p_buf).p_buf ;
+                    (*p_buf).p_buf = NULL ;
 
-                        (*p_buf).buf_length = 0 ;
-                    }
+                    (*p_buf).buf_length = 0 ;
                 }
-
-                if( (*p_buf).p_buf == NULL )
-                {
-                    (*p_buf).buf_length = data_length ;
-                    (*p_buf).p_buf = new unsigned char[(*p_buf).buf_length];
-                }
-
-                memcpy((*p_buf).p_buf, buf+index, data_length);
-
-                width = image_width ;
-                height = image_height ;
             }
+
+            if( (*p_buf).p_buf == NULL )
+            {
+                (*p_buf).buf_length = data_length ;
+                (*p_buf).p_buf = new unsigned char[(*p_buf).buf_length];
+            }
+
+            memcpy((*p_buf).p_buf, buf+index, data_length);
+
+            width = image_width ;
+            height = image_height ;
         }
 	}
 
