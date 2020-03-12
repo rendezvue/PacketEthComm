@@ -203,16 +203,17 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
                 std::chrono::system_clock::time_point end_time = std::chrono::system_clock::now();
                 std::chrono::seconds sec = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
 
+#if 0
                 if( sec.count() > 10 )
                 {
                     m_cls_check_data.init_variable();
 
                     m_mutex_recv.unlock();
 
-                    //LOG(REV_LOG_VISION, "Exception Receive : %s", e.what()) ;
+                    printf("Receive error :10 sec\n") ;
                     return ENSEMBLE_ERROR_SOCKET_READ;
                 }
-
+#endif
 
 				if (error == boost::asio::error::eof)
 				{
@@ -242,7 +243,7 @@ int CEthernetClientControlData::Receive(tcp::socket *soc, std::string *out_str_i
 
 				m_mutex_recv.unlock();
 
-				//printf("Exception Receive : %s\n", e.what()) ;
+				printf("Exception Receive : %s\n", e.what()) ;
 				//printf("return ENSEMBLE_ERROR_SOCKET_READ\n") ;
 				
                 return ENSEMBLE_ERROR_SOCKET_READ;
